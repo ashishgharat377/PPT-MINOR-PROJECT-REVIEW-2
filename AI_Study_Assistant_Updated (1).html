@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AI-Powered Study Assistant — Review 2</title>
+<style>
+:root{
+  --ink:#17202a; --muted:#66717d; --paper:#f5f1e8; --white:#fffdf8;
+  --blue:#2457d6; --coral:#f06449; --mint:#55bfa8; --yellow:#f2c94c;
+  --line:#d9d3c7; --soft:#ebe6dc; --navy:#18243d;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--paper);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.16;background-image:radial-gradient(#8f8779 0.6px,transparent .6px);background-size:7px 7px}
+#stage{position:fixed;inset:0;display:grid;place-items:center}
+#deck{width:min(100vw,calc((100vh - 54px)*16/9));aspect-ratio:16/9;position:relative;overflow:hidden;background:var(--paper);box-shadow:0 24px 80px #30291f35}
+.slide{position:absolute;inset:0;padding:62px 78px 68px;display:none;overflow:hidden}
+.slide.on{display:block;animation:in .55s cubic-bezier(.2,.8,.2,1)}
+@keyframes in{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
+.kicker{font:700 13px ui-monospace,SFMono-Regular,monospace;letter-spacing:.18em;color:var(--blue);text-transform:uppercase}
+h1{font-size:clamp(44px,5.2vw,88px);line-height:.96;letter-spacing:-.055em;margin:18px 0}
+h2{font-size:clamp(34px,3.6vw,62px);line-height:1;letter-spacing:-.045em;margin:12px 0 24px}
+h3{margin:0 0 9px;font-size:23px;letter-spacing:-.02em}
+p{font-size:19px;line-height:1.45;color:var(--muted);margin:0}
+.small{font-size:14px!important;line-height:1.4!important}
+.blue{color:var(--blue)} .coral{color:var(--coral)} .mint{color:#198b75}
+.tag{display:inline-flex;align-items:center;padding:8px 12px;border-radius:999px;background:var(--white);border:1px solid var(--line);font:700 12px ui-monospace,monospace;letter-spacing:.08em}
+.footer{position:absolute;left:78px;right:78px;bottom:24px;display:flex;justify-content:space-between;color:#89908f;font:11px ui-monospace,monospace;letter-spacing:.08em}
+.rule{height:1px;background:var(--line);margin:22px 0}
+.grid{display:grid;gap:18px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--white);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 10px 28px #4b40301a}
+.card.bluecard{background:var(--blue);color:white;border-color:var(--blue)} .bluecard p{color:#dbe4ff}
+.num{font-size:56px;line-height:1;font-weight:850;letter-spacing:-.05em;color:var(--blue)}
+.icon{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:var(--soft);font-size:22px;margin-bottom:16px}
+.pillrow{display:flex;gap:10px;flex-wrap:wrap}
+.flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.node{padding:15px 17px;border:1px solid var(--line);border-radius:16px;background:var(--white);font-weight:750}
+.arrow{font-size:22px;color:var(--coral);font-weight:900}
+.highlight{background:var(--yellow);padding:2px 8px;border-radius:8px}
+.bigquote{font-size:38px;line-height:1.08;font-weight:800;letter-spacing:-.04em}
+.bar{height:10px;background:var(--soft);border-radius:20px;overflow:hidden}.bar>i{display:block;height:100%;background:var(--blue);border-radius:20px}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--coral);display:inline-block}
+.heroShape{position:absolute;right:-120px;top:-120px;width:580px;height:580px;border-radius:50%;background:var(--blue);opacity:.95}
+.heroShape:after{content:"";position:absolute;left:130px;top:145px;width:310px;height:310px;border:2px solid #ffffff55;border-radius:50%}
+.paper{position:absolute;width:250px;height:310px;background:var(--white);border:1px solid var(--line);border-radius:12px;box-shadow:0 25px 40px #241f1630;padding:24px;transform:rotate(-7deg)}
+.paper:nth-child(2){transform:rotate(7deg);right:190px;top:270px}.paper:nth-child(1){right:330px;top:210px}
+.paper .line{height:8px;background:var(--soft);margin:12px 0;border-radius:6px}.paper .line.b{width:70%}.paper .line.c{width:88%}
+.timeline{display:grid;grid-template-columns:repeat(6,1fr);gap:0;margin-top:35px;position:relative}.timeline:before{content:"";position:absolute;left:4%;right:4%;top:19px;height:3px;background:var(--line)}
+.step{position:relative;text-align:center}.step .circle{width:38px;height:38px;border-radius:50%;background:var(--white);border:3px solid var(--blue);margin:0 auto 14px;position:relative;z-index:2;display:grid;place-items:center;font-weight:900;color:var(--blue)}
+.step.active .circle{background:var(--blue);color:white}
+.step b{font-size:15px}.step span{display:block;font-size:12px;color:var(--muted);margin-top:5px}
+.arch{display:grid;grid-template-columns:220px 1fr 260px;gap:14px;align-items:stretch;margin-top:25px}
+.archcol{display:flex;flex-direction:column;gap:12px}.archbox{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:18px}.archbox strong{display:block;margin-bottom:6px}.archbox small{color:var(--muted);line-height:1.35}
+.centerArch{background:var(--navy);border-radius:22px;padding:24px;color:white;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
+.centerArch:after{content:"RAG";position:absolute;font-size:130px;font-weight:900;right:-10px;bottom:-35px;color:#ffffff08}
+.layer{border:1px solid #ffffff25;background:#ffffff0d;border-radius:14px;padding:15px;margin:6px 0}.layer b{display:block}.layer span{font-size:12px;color:#b8c3d8}
+.feature{min-height:170px}.feature .icon{background:#e7efff;color:var(--blue)}
+.screen{background:#101a2e;border-radius:22px;padding:18px;color:white;box-shadow:0 20px 45px #101a2e30}
+.screenbar{display:flex;gap:7px;margin-bottom:15px}.screenbar i{width:8px;height:8px;border-radius:50%;background:#ffffff55}
+.chat{background:#182641;border-radius:14px;padding:14px;margin:10px 0;font-size:13px;line-height:1.4}.chat.user{margin-left:22%;background:var(--blue)}.source{color:#8bd8c7;font-size:11px;margin-top:8px}
+.table{width:100%;border-collapse:separate;border-spacing:0 8px}.table td{background:var(--white);padding:15px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.table td:first-child{border-left:1px solid var(--line);border-radius:12px 0 0 12px}.table td:last-child{border-right:1px solid var(--line);border-radius:0 12px 12px 0}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:25px}.compare>div{padding:24px;border:1px solid var(--line)}.compare>div:first-child{border-radius:20px 0 0 20px;background:#f0ece4}.compare>div:last-child{border-radius:0 20px 20px 0;background:#eaf1ff;border-color:#b9c9f7}
+.check{color:#198b75;font-weight:900}.cross{color:var(--coral);font-weight:900}
+.end{display:flex;align-items:center;justify-content:space-between;height:72%;gap:40px}.end .circleBig{width:300px;height:300px;border-radius:50%;background:var(--blue);display:grid;place-items:center;color:white;font-size:70px;font-weight:900;box-shadow:0 30px 60px #2457d633}
+.nav{position:fixed;left:0;right:0;bottom:0;height:42px;display:flex;align-items:center;justify-content:center;gap:6px;background:#f5f1e8ee;backdrop-filter:blur(10px);font:11px ui-monospace,monospace;color:#727871}
+.nav button{width:22px;height:5px;border:0;border-radius:8px;background:#d4cfc4;cursor:pointer;padding:0}.nav button.on{background:var(--blue);width:34px}
+.help{position:fixed;right:16px;bottom:11px;font:10px ui-monospace,monospace;color:#999}
+@media(max-width:900px){.slide{padding:40px}.footer{left:40px;right:40px}.g4{grid-template-columns:1fr 1fr}.arch{grid-template-columns:1fr}.heroShape{opacity:.2}}
+</style>
+</head>
+<body>
+<div id="stage"><main id="deck"></main></div>
+<div class="nav" id="nav"></div><div class="help">← → navigate · M overview · F fullscreen</div>
+<script>
+const S=[];
+const add=(name,html)=>S.push({name,html});
+const F=(n)=>`<div class="footer"><span>MIT AOE · DEPARTMENT OF INFORMATION TECHNOLOGY · PROJECT DESIGN</span><span>${String(n).padStart(2,'0')} / ${S.length}</span></div>`;
+add("OPENING",`
+<section class="slide on">
+<div class="heroShape"></div>
+<div class="kicker">PROJECT DESIGN · REVIEW 2</div>
+<h1 style="max-width:920px">What if your study material<br><span class="blue">could understand you?</span></h1>
+<p style="max-width:700px;font-size:23px"><span class="highlight" style="font-size:28px;font-weight:800">AI-Powered Personalized Study Assistant for Engineering Students</span></p>
+<div class="card" style="margin-top:24px;max-width:700px;background:rgba(255,255,255,.95)">
+<h3>TEAM</h3>
+<p><b>Ashish Gharat</b> • PRN 202501080144<br><b>Somnath Wanve</b> • PRN 202501080135<br><b>Arjun Ghone</b> • PRN 202501080140<br><b>Sumedh Zine</b> • PRN 202501080139</p>
+</div>
+<div style="margin-top:40px" class="pillrow"><span class="tag">AI + RAG</span><span class="tag">ENGINEERING EDUCATION</span><span class="tag">PERSONALIZED LEARNING</span></div>
+<div style="position:absolute;right:90px;bottom:120px;width:500px;height:330px">
+  <div class="paper"><b>Data Structures</b><div class="line"></div><div class="line c"></div><div class="line b"></div><div class="line"></div><span class="small">Unit 2 · Linked Lists</span></div>
+  <div class="paper"><b>Previous Year Paper</b><div class="line"></div><div class="line c"></div><div class="line"></div><div class="line b"></div><span class="small">Question 4 · 10 marks</span></div>
+</div>
+${F(1)}</section>`);
+
+add("THE PROBLEM",`
+<section class="slide">
+<div class="kicker">01 · PROBLEM</div><h2>Students don't lack information.<br><span class="coral">They lack a simple way to use it.</span></h2>
+<div class="grid g3" style="margin-top:35px">
+<div class="card"><div class="icon">📚</div><h3>Too much material</h3><p>Notes, PDFs, presentations, lab manuals and PYQs are scattered across different places.</p></div>
+<div class="card"><div class="icon">🔎</div><h3>Search takes time</h3><p>Finding one formula, diagram or concept inside a long document can become the task itself.</p></div>
+<div class="card"><div class="icon">🤖</div><h3>Generic AI isn't enough</h3><p>General answers may not match the exact syllabus, terminology or classroom material.</p></div>
+</div>
+<div class="grid g2" style="margin-top:18px">
+<div class="card"><div class="icon">🔁</div><h3>Revision is repetitive</h3><p>Students manually make summaries, question lists and flashcards again and again.</p></div>
+<div class="card bluecard"><div class="icon" style="background:#ffffff22">💡</div><h3>The gap</h3><p>A study assistant that works directly with the student's own academic material.</p></div>
+</div>${F(2)}</section>`);
+
+add("THE NEED",`
+<section class="slide">
+<div class="kicker">02 · NEED & SIGNIFICANCE</div><h2>Turn a pile of material into<br><span class="blue">one learning workspace.</span></h2>
+<div class="flow" style="justify-content:center;margin-top:48px">
+<div class="node">Notes</div><div class="arrow">+</div><div class="node">Syllabus</div><div class="arrow">+</div><div class="node">PYQs</div><div class="arrow">+</div><div class="node">Lab material</div>
+</div>
+<div style="text-align:center;font-size:42px;color:var(--coral);margin:18px">↓</div>
+<div class="card bluecard" style="max-width:760px;margin:auto;text-align:center;padding:34px">
+<div class="bigquote">ONE CONTEXT-AWARE<br>STUDY ASSISTANT</div>
+<p style="margin-top:14px">Ask → retrieve → explain → revise</p>
+</div>
+<p style="text-align:center;margin-top:25px">The idea is not “another chatbot.” The idea is <b>academic context + AI assistance</b> in one place.</p>
+${F(3)}</section>`);
+
+add("OBJECTIVES",`
+<section class="slide">
+<div class="kicker">03 · OBJECTIVES</div><h2>Six things the system should make easier.</h2>
+<div class="grid g3" style="margin-top:30px">
+<div class="card feature"><div class="icon">01</div><h3>Context-based answers</h3><p>Answer from uploaded study material instead of only generic knowledge.</p></div>
+<div class="card feature"><div class="icon">02</div><h3>Reduce search effort</h3><p>Find relevant information from long notes and documents quickly.</p></div>
+<div class="card feature"><div class="icon">03</div><h3>Automated revision</h3><p>Create concise summaries and key takeaways from dense chapters.</p></div>
+<div class="card feature"><div class="icon">04</div><h3>Self-assessment</h3><p>Generate MCQs and flashcards from course documents.</p></div>
+<div class="card feature"><div class="icon">05</div><h3>Personalized support</h3><p>Explain difficult engineering concepts in simpler language.</p></div>
+<div class="card feature"><div class="icon">06</div><h3>Better productivity</h3><p>Move time from document hunting toward learning and problem solving.</p></div>
+</div>
+<p class="small" style="margin-top:14px"><b>Note:</b> “saving up to 70% of lookup time” is a proposed objective from the reference deck, not a measured project result.</p>
+${F(4)}</section>`);
+
+add("LITERATURE",`
+<section class="slide">
+<div class="kicker">04 · LITERATURE REVIEW</div><h2>Research already points toward <span class="blue">context-aware learning.</span></h2>
+<div class="grid g4" style="margin-top:28px">
+<div class="card"><div class="num">161</div><h3>AI in engineering education</h3><p>Studies in a systematic review.</p></div>
+<div class="card"><div class="num">26</div><h3>GenAI learning assistants</h3><p>Peer-reviewed articles reviewed.</p></div>
+<div class="card"><div class="num">51</div><h3>RAG in education</h3><p>Studies in a systematic survey.</p></div>
+<div class="card"><div class="num">146</div><h3>GenAI in engineering & computing</h3><p>Studies in a scoping review.</p></div>
+</div>
+<div class="card" style="margin-top:20px;background:#fff9e4;border-color:#e7d78d">
+<h3>What this means for our project</h3><p>General AI is useful, but education needs <b>relevant context</b>. Our project focuses that idea on engineering students and their own study material.</p>
+</div>
+${F(5)}</section>`);
+
+add("RAG SIMPLE",`
+<section class="slide">
+<div class="kicker">05 · THE AI ENGINE</div><h2>RAG, explained in one sentence.</h2>
+<div class="card bluecard" style="max-width:1120px;margin:32px auto 25px;text-align:center;padding:34px">
+<div class="bigquote">“Find the right information first.<br>Then ask the AI to explain it.”</div>
+</div>
+<div class="flow" style="justify-content:center;margin-top:34px">
+<div class="node">Student question</div><div class="arrow">→</div>
+<div class="node">Search study material</div><div class="arrow">→</div>
+<div class="node">Relevant context</div><div class="arrow">→</div>
+<div class="node">AI response</div>
+</div>
+<div style="display:flex;justify-content:center;margin-top:35px"><span class="tag">R = RETRIEVAL</span><span style="margin:0 8px">+</span><span class="tag">G = GENERATION</span></div>
+${F(6)}</section>`);
+
+add("WHY RAG",`
+<section class="slide">
+<div class="kicker">06 · WHY RAG?</div><h2>What changes when the AI can see <span class="blue">your notes?</span></h2>
+<div class="compare">
+<div><div class="tag">GENERAL AI</div><div style="margin-top:20px"><p>Broad knowledge</p><p style="margin-top:12px">May use different terminology</p><p style="margin-top:12px">Doesn't automatically know private lecture slides</p><p style="margin-top:12px">Higher risk of irrelevant answers</p></div></div>
+<div><div class="tag" style="background:#dce7ff;border-color:#b9c9f7">RAG STUDY ASSISTANT</div><div style="margin-top:20px"><p><span class="check">✓</span> Grounded in uploaded material</p><p style="margin-top:12px"><span class="check">✓</span> Matches syllabus-specific context</p><p style="margin-top:12px"><span class="check">✓</span> New documents can be indexed</p><p style="margin-top:12px"><span class="check">✓</span> Can point to relevant source content</p></div></div>
+</div>
+<p style="margin-top:22px"><b>Important:</b> RAG reduces the chance of irrelevant or unsupported answers; it does not magically guarantee perfect accuracy.</p>
+${F(7)}</section>`);
+
+add("WORKFLOW",`
+<section class="slide">
+<div class="kicker">07 · HOW IT WORKS</div><h2>From PDF to answer — <span class="blue">step by step.</span></h2>
+<div class="timeline">
+<div class="step active"><div class="circle">1</div><b>Upload</b><span>PDF / PPT / notes</span></div>
+<div class="step"><div class="circle">2</div><b>Parse</b><span>extract text</span></div>
+<div class="step"><div class="circle">3</div><b>Chunk</b><span>split content</span></div>
+<div class="step"><div class="circle">4</div><b>Index</b><span>embeddings + vector store</span></div>
+<div class="step"><div class="circle">5</div><b>Retrieve</b><span>find relevant chunks</span></div>
+<div class="step"><div class="circle">6</div><b>Generate</b><span>LLM explains</span></div>
+</div>
+<div class="card" style="margin-top:45px;text-align:center">
+<p><b>Simple mental model:</b> Your documents become a searchable memory. The question activates the relevant part of that memory.</p>
+</div>${F(8)}</section>`);
+
+add("FEATURES",`
+<section class="slide">
+<div class="kicker">08 · KEY FEATURES</div><h2>Not just Q&A. A small <span class="blue">study toolkit.</span></h2>
+<div class="grid g3" style="margin-top:28px">
+<div class="card feature"><div class="icon">💬</div><h3>Document Q&A</h3><p>Ask natural questions about uploaded lecture material.</p></div>
+<div class="card feature"><div class="icon">📝</div><h3>Smart summaries</h3><p>Turn long chapters into concise revision points.</p></div>
+<div class="card feature"><div class="icon">🧠</div><h3>MCQ generator</h3><p>Create practice questions directly from study documents.</p></div>
+<div class="card feature"><div class="icon">🃏</div><h3>Flashcards</h3><p>Convert definitions, formulas and concepts into review cards.</p></div>
+<div class="card feature"><div class="icon">💡</div><h3>Concept explainer</h3><p>Request simpler analogies or step-by-step explanations.</p></div>
+<div class="card feature"><div class="icon">🎯</div><h3>Personalized guidance</h3><p>Suggest areas to review using interaction and study history.</p></div>
+</div>${F(9)}</section>`);
+
+add("EXAM EXAMPLE",`
+<section class="slide">
+<div class="kicker">09 · EXAM PREP EXAMPLE</div><h2>One real study question. <span class="blue">One simple answer.</span></h2>
+<div class="grid g2" style="margin-top:25px;align-items:start">
+<div class="card"><span class="tag">INPUT</span><h3 style="margin-top:18px">Data Structures — Unit 2 Notes.pdf</h3><p class="highlight" style="display:inline-block;margin-top:12px">“Explain linked lists in simple language and state their advantages over arrays.”</p><div class="rule"></div><p><b>System action:</b> retrieve the relevant passage from the uploaded document.</p></div>
+<div class="screen"><div class="screenbar"><i></i><i></i><i></i><span style="margin-left:auto;font-size:11px;color:#9ba8be">AI STUDY ASSISTANT</span></div>
+<div class="chat user">Explain linked lists in simple language.</div>
+<div class="chat">A linked list stores data in separate nodes connected through links. Unlike an array, its elements do not need to be stored next to each other in memory.<div class="source">SOURCE · uploaded notes · relevant page</div></div>
+<div class="chat"><b>Key advantages</b><br>• Dynamic size<br>• Efficient insertion and deletion</div>
+</div>
+</div>
+<p style="margin-top:18px"><b>Why this is useful:</b> the student asks naturally; the system does the searching and presents the answer in an easier format.</p>
+${F(10)}</section>`);
+
+add("APPLICATIONS",`
+<section class="slide">
+<div class="kicker">10 · APPLICATIONS</div><h2>Where would a student actually use it?</h2>
+<div class="grid g4" style="margin-top:35px">
+<div class="card"><div class="num">01</div><h3>Exam preparation</h3><p>Quickly revise targeted concepts before MSE/ESE.</p></div>
+<div class="card"><div class="num">02</div><h3>Daily study</h3><p>Summarize lecture material after class.</p></div>
+<div class="card"><div class="num">03</div><h3>Complex topics</h3><p>Break algorithms, theories and formulas into simpler explanations.</p></div>
+<div class="card"><div class="num">04</div><h3>Last-minute review</h3><p>Use generated flashcards and concise notes for fast revision.</p></div>
+</div>
+<div class="grid g3" style="margin-top:18px">
+<div class="card"><h3>Self-assessment</h3><p>Practice with generated quizzes.</p></div>
+<div class="card"><h3>Self-paced learning</h3><p>Get help without waiting for a tutor.</p></div>
+<div class="card"><h3>Structured revision</h3><p>Study topic by topic instead of randomly.</p></div>
+</div>${F(11)}</section>`);
+
+add("PRODUCT VISION",`
+<section class="slide">
+<div class="kicker">11 · PROPOSED SYSTEM</div><h2>Beyond a chatbot: <span class="blue">an AI-powered student companion.</span></h2>
+<div class="grid g2" style="margin-top:25px;align-items:center">
+<div>
+<div class="card"><h3>Study</h3><p>Notes, PDFs, Q&A, summaries and concepts.</p></div>
+<div class="card" style="margin-top:12px"><h3>Manage</h3><p>Attendance, timetable, assignments and academic alerts.</p></div>
+<div class="card" style="margin-top:12px"><h3>Revise</h3><p>MCQs, flashcards and weak-topic support.</p></div>
+<div class="card" style="margin-top:12px"><h3>Plan</h3><p>Personalized guidance based on academic context.</p></div>
+</div>
+<div class="screen" style="height:450px">
+<div class="screenbar"><i></i><i></i><i></i><span style="margin-left:auto">STUDENT DASHBOARD · CONCEPT</span></div>
+<div style="font-size:25px;font-weight:800;margin-bottom:18px">Good evening, Student 👋</div>
+<div class="grid g2">
+<div class="chat"><b>Today's focus</b><br>Data Structures · Unit 2</div>
+<div class="chat"><b>Attendance</b><br><span style="color:#8bd8c7">82%</span> · on track</div>
+<div class="chat"><b>AI Assistant</b><br>“What should I revise today?”</div>
+<div class="chat"><b>Upcoming</b><br>Assignment · Friday</div>
+</div>
+<div class="chat user">Explain my weakest topic.</div>
+<div class="chat">The assistant uses your available academic context to suggest what to review next.</div>
+</div>
+</div>
+<p class="small" style="margin-top:10px"><b>PROPOSED SYSTEM / UI CONCEPT</b> — not a claim that every module is already implemented.</p>
+${F(12)}</section>`);
+
+add("ARCHITECTURE",`
+<section class="slide">
+<div class="kicker">12 · SYSTEM ARCHITECTURE</div><h2>Two layers. One student experience.</h2>
+<div class="arch">
+<div class="archcol">
+<div class="archbox"><strong>Student</strong><small>Uploads material<br>asks questions<br>checks progress</small></div>
+<div class="archbox"><strong>Web Interface</strong><small>Dashboard + study tools</small></div>
+</div>
+<div class="centerArch">
+<div class="layer"><b>RAG & LLM ENGINE</b><span>retrieve relevant chunks → add context → generate response</span></div>
+<div class="layer"><b>PROCESSING & VECTOR STORE</b><span>chunking → embeddings → vector database</span></div>
+<div class="layer"><b>BACKEND APPLICATION</b><span>API, document ingestion, sessions and queries</span></div>
+</div>
+<div class="archcol">
+<div class="archbox"><strong>Academic Context</strong><small>Subjects · timetable · attendance · assignments · quizzes · history</small></div>
+<div class="archbox"><strong>Knowledge Base</strong><small>Notes · syllabus · lab manuals · reference chapters · PYQs</small></div>
+</div>
+</div>
+<div class="card" style="margin-top:20px;text-align:center"><b>Data isolation:</b> the reference design proposes keeping indexed documents separated by user session.</div>
+${F(13)}</section>`);
+
+add("TECH STACK",`
+<section class="slide">
+<div class="kicker">13 · PROPOSED TECHNOLOGY</div><h2>Use familiar tools — keep the architecture flexible.</h2>
+<table class="table" style="margin-top:24px">
+<tr><td><b>Frontend</b></td><td>HTML5, CSS3, JavaScript / React</td></tr>
+<tr><td><b>Backend</b></td><td>Python — FastAPI / Flask</td></tr>
+<tr><td><b>AI / RAG</b></td><td>LangChain / LlamaIndex + LLM API</td></tr>
+<tr><td><b>Vector store</b></td><td>ChromaDB / FAISS</td></tr>
+<tr><td><b>Development</b></td><td>VS Code · Git · GitHub</td></tr>
+<tr><td><b>Hardware</b></td><td>Laptop / desktop · 8 GB+ RAM recommended</td></tr>
+<tr><td><b>Connectivity</b></td><td>Stable internet · cloud/API resources as required</td></tr>
+</table>
+<p class="small" style="margin-top:14px"><b>PROPOSED — TO BE FINALIZED DURING IMPLEMENTATION.</b> The alternatives above are from the reference project design.</p>
+${F(14)}</section>`);
+
+add("ROADMAP",`
+<section class="slide">
+<div class="kicker">14 · SCOPE & FUTURE</div><h2>Start small. Build the core. Then expand.</h2>
+<div class="grid g2" style="margin-top:28px">
+<div class="card bluecard"><div class="tag" style="background:#ffffff20;color:white;border-color:#ffffff35">REVIEW 2 CORE</div><div style="margin-top:20px">
+<p>✓ PDF/text upload & processing</p><p>✓ Contextual Q&A grounded in notes</p><p>✓ Summary + MCQ generation</p><p>✓ Basic flashcards</p></div></div>
+<div class="card"><div class="tag">POSSIBLE FUTURE</div><div style="margin-top:20px">
+<p>→ Voice-based assistant</p><p>→ Multilingual support</p><p>→ Android / iOS app</p><p>→ College LMS integration</p></div></div>
+</div>
+<div class="timeline" style="margin-top:45px;grid-template-columns:repeat(6,1fr)">
+<div class="step active"><div class="circle">1</div><b>Research</b><span>problem + literature</span></div>
+<div class="step active"><div class="circle">2</div><b>Design</b><span>architecture + UI</span></div>
+<div class="step active"><div class="circle">3</div><b>Build</b><span>frontend + backend</span></div>
+<div class="step"><div class="circle">4</div><b>RAG</b><span>embeddings + retrieval</span></div>
+<div class="step"><div class="circle">5</div><b>Features</b><span>MCQs + tools</span></div>
+<div class="step"><div class="circle">6</div><b>Test</b><span>demo + Review 2</span></div>
+</div>${F(15)}</section>`);
+
+add("TEAM",`
+<section class="slide">
+<div class="kicker">15 · TEAM & COLLABORATION</div><h2>Four people. Four responsibilities. <span class="blue">One system.</span></h2>
+<div class="grid g4" style="margin-top:38px">
+<div class="card"><div class="num" style="font-size:38px">01</div><h3>Ashish Gharat</h3><p><b>Lead</b><br>Overall coordination, system architecture and documentation.</p></div>
+<div class="card"><div class="num" style="font-size:38px">02</div><h3>Arjun Ghone</h3><p><b>Research</b><br>Domain research, requirements and educational workflow.</p></div>
+<div class="card"><div class="num" style="font-size:38px">03</div><h3>Sumedh Zine</h3><p><b>Frontend</b><br>Web development, chatbot UI and student dashboard.</p></div>
+<div class="card"><div class="num" style="font-size:38px">04</div><h3>Somnath Wanve</h3><p><b>Backend</b><br>API development, vector DB ingestion and RAG testing.</p></div>
+</div>
+<div class="card" style="margin-top:25px;text-align:center;background:#fff9e4"><b>Collaboration loop:</b> Research → Design → Build → Test → Review → Improve</div>
+${F(16)}</section>`);
+
+add("THANK YOU",`
+<section class="slide">
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:80%;text-align:center">
+<div class="kicker">THANK YOU</div>
+<h1><span class="blue">Thank You</span></h1>
+<p style="font-size:28px">Questions & Discussion</p>
+</div>
+${F(17)}</section>`);
+add("CONCLUSION",`
+<section class="slide">
+<div class="end">
+<div style="max-width:900px">
+<div class="kicker">16 · CONCLUSION</div>
+<h1>From <span class="coral">chaotic study material</span><br>to <span class="blue">structured preparation.</span></h1>
+<p style="font-size:24px;max-width:800px">Our proposed AI-Powered Study Assistant uses syllabus-grounded retrieval and AI generation to help engineering students ask, understand, revise and prepare using their own academic material.</p>
+<div class="pillrow" style="margin-top:28px"><span class="tag">ASK</span><span class="tag">UNDERSTAND</span><span class="tag">REVISE</span><span class="tag">PREPARE</span></div>
+</div>
+<div class="circleBig">AI<br>+</div>
+</div>
+${F(17)}</section>`);
+
+const deck=document.getElementById('deck'),nav=document.getElementById('nav');
+S.forEach((s,i)=>{const el=document.createElement('div');el.innerHTML=s.html;const slide=el.firstElementChild;slide.dataset.i=i;deck.appendChild(slide);const b=document.createElement('button');b.title=s.name;b.onclick=()=>go(i);nav.appendChild(b)});
+let cur=0;
+function go(n){n=(n+S.length)%S.length;cur=n;[...deck.children].forEach((x,i)=>x.classList.toggle('on',i===n));[...nav.children].forEach((x,i)=>x.classList.toggle('on',i===n));}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' ')go(cur+1);if(e.key==='ArrowLeft')go(cur-1);if(e.key.toLowerCase()==='f')document.documentElement.requestFullscreen?.();if(e.key.toLowerCase()==='m'){alert(S.map((x,i)=>`${i+1}. ${x.name}`).join('\\n'))}});
+let sx=0;deck.addEventListener('touchstart',e=>sx=e.touches[0].clientX);deck.addEventListener('touchend',e=>{let dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)go(cur+(dx<0?1:-1))});
+go(0);
+</script>
+</body>
+</html>
